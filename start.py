@@ -174,14 +174,17 @@ def write_json_file(filepath, data):
         json.dump(data, f, ensure_ascii=False)
 
 
-def call_anthropic_api(agent_name, input_data, api_key):
+def call_openrouter_api(agent_name, input_data, api_key, model_name):
     system_prompt = AGENT_PROMPTS.get(agent_name, "")
     payload = json.dumps({
-        "model": "claude-sonnet-4-20250514",
+        "model": model_name,
         "max_tokens": 8192,
         "temperature": 0.1,
-        "system": system_prompt,
         "messages": [
+            {
+                "role": "system",
+                "content": system_prompt
+            },
             {
                 "role": "user",
                 "content": "Iltimos, ushbu ma'lumotlarni tahlil qiling: " + json.dumps(input_data, ensure_ascii=False)
@@ -190,12 +193,13 @@ def call_anthropic_api(agent_name, input_data, api_key):
     }).encode("utf-8")
 
     req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
+        "https://openrouter.ai/api/v1/chat/completions",
         data=payload,
         headers={
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
+            "Authorization": "Bearer " + api_key,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:3000",
+            "X-Title": "Anticorruption AI Agent System"
         },
         method="POST"
     )
@@ -203,44 +207,48 @@ def call_anthropic_api(agent_name, input_data, api_key):
     try:
         with urllib.request.urlopen(req, timeout=120) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            content = data["content"][0]["text"]
+            content = data["choices"][0]["message"]["content"]
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
             return json.loads(content.strip())
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8") if e.fp else ""
+        print(f"  [!] Agent {agent_name} HTTP xatolik {e.code}: {error_body[:300]}")
+        return {"error": f"HTTP {e.code}: {error_body[:200]}", "agent": agent_name}
     except Exception as e:
         print(f"  [!] Agent {agent_name} xatolik: {e}")
         return {"error": str(e), "agent": agent_name}
 
 
-def run_analysis(document_text, api_key):
+def run_analysis(document_text, api_key, model_name):
     print("  [1/5] LAW_SCANNER va CONFLICT_DETECTOR ishlamoqda (parallel)...")
     import concurrent.futures
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        f1 = executor.submit(call_anthropic_api, "LAW_SCANNER", {"document_text": document_text}, api_key)
-        f2 = executor.submit(call_anthropic_api, "CONFLICT_DETECTOR", {"document_text": document_text}, api_key)
+        f1 = executor.submit(call_openrouter_api, "LAW_SCANNER", {"document_text": document_text}, api_key, model_name)
+        f2 = executor.submit(call_openrouter_api, "CONFLICT_DETECTOR", {"document_text": document_text}, api_key, model_name)
         scan_result = f1.result()
         conflict_result = f2.result()
 
     print("  [2/5] SOLUTION_ARCHITECT va HARMONIZATION_EXPERT ishlamoqda (parallel)...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        f3 = executor.submit(call_anthropic_api, "SOLUTION_ARCHITECT", {"scan_result": scan_result}, api_key)
-        f4 = executor.submit(call_anthropic_api, "HARMONIZATION_EXPERT", {"conflict_result": conflict_result}, api_key)
+        f3 = executor.submit(call_openrouter_api, "SOLUTION_ARCHITECT", {"scan_result": scan_result}, api_key, model_name)
+        f4 = executor.submit(call_openrouter_api, "HARMONIZATION_EXPERT", {"conflict_result": conflict_result}, api_key, model_name)
         solution_result = f3.result()
         harmonization_result = f4.result()
 
     print("  [3/5] PREDICTOR ishlamoqda...")
-    prediction_result = call_anthropic_api("PREDICTOR", {"scan": scan_result, "conflicts": conflict_result}, api_key)
+    prediction_result = call_openrouter_api("PREDICTOR", {"scan": scan_result, "conflicts": conflict_result}, api_key, model_name)
 
     print("  [4/5] REPORT_COMPILER ishlamoqda...")
-    compiler_result = call_anthropic_api("REPORT_COMPILER", {
+    compiler_result = call_openrouter_api("REPORT_COMPILER", {
         "scan": scan_result,
         "solutions": solution_result,
         "conflicts": conflict_result,
         "harmonization": harmonization_result,
         "predictions": prediction_result
-    }, api_key)
+    }, api_key, model_name)
 
     print("  [5/5] Tahlil yakunlandi!")
     return {
@@ -260,13 +268,24 @@ class MyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/settings":
-            data = read_json_file(SETTINGS_FILE) or {"api_key": ""}
-            self._send_json({"api_key": data.get("api_key", "")})
+            data = read_json_file(SETTINGS_FILE) or {"api_key": "", "model": ""}
+            self._send_json({
+                "api_key": data.get("api_key", ""),
+                "model": data.get("model", "google/gemini-2.0-flash-001")
+            })
         elif path == "/api/history":
             data = read_json_file(HISTORY_FILE) or []
             self._send_json(data)
         else:
             super().do_GET()
+
+    def do_DELETE(self):
+        path = urlparse(self.path).path
+        if path == "/api/history":
+            write_json_file(HISTORY_FILE, [])
+            self._send_json({"status": "success", "message": "Tarix tozalandi"})
+        else:
+            self._send_json({"detail": "Not Found"}, code=404)
 
     def do_POST(self):
         path = urlparse(self.path).path
@@ -274,7 +293,10 @@ class MyHandler(SimpleHTTPRequestHandler):
         body = json.loads(self.rfile.read(content_length).decode("utf-8")) if content_length else {}
 
         if path == "/api/settings":
-            write_json_file(SETTINGS_FILE, {"api_key": body.get("api_key", "")})
+            write_json_file(SETTINGS_FILE, {
+                "api_key": body.get("api_key", ""),
+                "model": body.get("model", "google/gemini-2.0-flash-001")
+            })
             self._send_json({"status": "success", "message": "Settings saved"})
 
         elif path == "/api/analyze":
@@ -285,10 +307,11 @@ class MyHandler(SimpleHTTPRequestHandler):
             if not api_key:
                 self._send_json({"detail": "API Key topilmadi. Iltimos Sozlamalardan kiriting."}, code=400)
                 return
+            model_name = settings.get("model", "google/gemini-2.0-flash-001") if settings else "google/gemini-2.0-flash-001"
             try:
                 document_text = body.get("document_text", "")
-                print(f"\n--- Yangi tahlil boshlandi ({len(document_text)} belgi) ---")
-                results = run_analysis(document_text, api_key)
+                print(f"\n--- Yangi tahlil boshlandi ({len(document_text)} belgi, model: {model_name}) ---")
+                results = run_analysis(document_text, api_key, model_name)
 
                 # Save to history
                 history = read_json_file(HISTORY_FILE) or []
@@ -321,7 +344,7 @@ class MyHandler(SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 

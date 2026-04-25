@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveSettingsBtn.addEventListener('click', async () => {
         const key = apiKeyInput.value.trim();
-        await saveSettings(key);
+        const model = document.getElementById('modelSelect').value;
+        await saveSettings(key, model);
         settingsModal.classList.add('hidden');
         alert("Sozlamalar saqlandi!");
     });
@@ -47,6 +48,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeHistoryBtn.addEventListener('click', () => {
         historyModal.classList.add('hidden');
+    });
+
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    clearHistoryBtn.addEventListener('click', async () => {
+        if (confirm("Barcha tarixni o'chirmoqchimisiz?")) {
+            try {
+                await fetch('/api/history', { method: 'DELETE' });
+                historyList.innerHTML = "<p>Tarix tozalandi.</p>";
+            } catch (e) {
+                alert("Xatolik yuz berdi.");
+            }
+        }
     });
 
     // Analysis Event
@@ -97,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         resetProgress();
     });
 
-    // API Functions
     async function fetchSettings() {
         try {
             const res = await fetch('/api/settings');
@@ -105,17 +117,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.api_key) {
                 apiKeyInput.value = data.api_key;
             }
+            if (data.model) {
+                document.getElementById('modelSelect').value = data.model;
+            }
         } catch (e) {
             console.error("Sozlamalarni yuklashda xatolik", e);
         }
     }
 
-    async function saveSettings(key) {
+    async function saveSettings(key, model) {
         try {
             await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ api_key: key })
+                body: JSON.stringify({ api_key: key, model: model })
             });
         } catch (e) {
             console.error("Sozlamalarni saqlashda xatolik", e);

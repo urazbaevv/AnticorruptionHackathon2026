@@ -30,9 +30,22 @@
                 <button id="closeSettingsBtn" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <label for="apiKeyInput">Anthropic API Kaliti</label>
-                <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
-                <p class="hint">API kalit loyiha papkasida (data/settings.json) xavfsiz saqlanadi va brauzer yopilganda ham o'chib ketmaydi.</p>
+                <label for="apiKeyInput">OpenRouter API Kaliti</label>
+                <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." autocomplete="off">
+                <p class="hint">API kalitni <a href="https://openrouter.ai/keys" target="_blank" style="color: var(--primary);">openrouter.ai/keys</a> saytidan oling.</p>
+                
+                <label for="modelSelect" style="margin-top: 1rem; display: block;">AI Model</label>
+                <select id="modelSelect" style="width:100%; background: rgba(15,23,42,0.6); border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem 1rem; color: var(--text-color); font-family: var(--font-family); margin-bottom: 0.5rem;">
+                    <option value="google/gemini-2.0-flash-001">Google Gemini 2.0 Flash (Tez & Arzon)</option>
+                    <option value="google/gemini-2.5-flash-preview">Google Gemini 2.5 Flash Preview</option>
+                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="anthropic/claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                    <option value="openai/gpt-4o">GPT-4o</option>
+                    <option value="openai/gpt-4o-mini">GPT-4o Mini (Arzon)</option>
+                    <option value="deepseek/deepseek-chat-v3-0324">DeepSeek V3</option>
+                    <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+                </select>
+                <p class="hint">Kalit va model loyiha papkasida (data/settings.json) saqlanadi.</p>
             </div>
             <div class="modal-footer">
                 <button id="saveSettingsBtn" class="btn-primary">Saqlash</button>
@@ -49,6 +62,9 @@
             </div>
             <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
                 <div id="historyList">Yuklanmoqda...</div>
+            </div>
+            <div class="modal-footer">
+                <button id="clearHistoryBtn" class="btn-outline" style="color: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-trash"></i> Tarixni Tozalash</button>
             </div>
         </div>
     </div>
