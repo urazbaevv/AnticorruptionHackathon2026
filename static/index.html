@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anticorruption AI System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Anticorruption AI</span>
+        </div>
+        <div class="nav-buttons" style="display: flex; gap: 1rem;">
+            <button id="historyBtn" class="btn-icon"><i class="fa-solid fa-clock-rotate-left"></i> Tarix</button>
+            <button id="settingsBtn" class="btn-icon"><i class="fa-solid fa-gear"></i> Sozlamalar</button>
+        </div>
+    </nav>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-key"></i> API Sozlamalari</h2>
+                <button id="closeSettingsBtn" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <label for="apiKeyInput">Anthropic API Kaliti</label>
+                <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+                <p class="hint">API kalit loyiha papkasida (data/settings.json) xavfsiz saqlanadi va brauzer yopilganda ham o'chib ketmaydi.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsBtn" class="btn-primary">Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal hidden">
+        <div class="modal-content glass-card" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> Tahlil Tarixi</h2>
+                <button id="closeHistoryBtn" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                <div id="historyList">Yuklanmoqda...</div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <!-- Input Section -->
+        <section id="inputSection" class="card glass-card fade-in">
+            <h1>Qonun Hujjatlarini Tahlil Qilish</h1>
+            <p>Yangi qonun matnini kiriting. 6 ta maxsus agent (AI) uni korrupsion xavflar va qonuniy bo'shliqlar bo'yicha tahlil qiladi.</p>
+            
+            <textarea id="documentInput" placeholder="Qonun hujjatining matnini shu yerga kiriting..."></textarea>
+            
+            <button id="analyzeBtn" class="btn-primary btn-large">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> Tahlilni Boshlash
+            </button>
+        </section>
+
+        <!-- Loading Section -->
+        <section id="loadingSection" class="card glass-card hidden">
+            <h2>AI Agentlar Ishlamoqda...</h2>
+            <div class="agents-progress">
+                <div class="agent-step" id="step-scanner">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>LAW_SCANNER</span>
+                    <div class="spinner hidden"></div>
+                </div>
+                <div class="agent-step" id="step-conflict">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>CONFLICT_DETECTOR</span>
+                    <div class="spinner hidden"></div>
+                </div>
+                <div class="agent-step" id="step-solution">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>SOLUTION_ARCHITECT</span>
+                    <div class="spinner hidden"></div>
+                </div>
+                <div class="agent-step" id="step-harmonization">
+                    <i class="fa-solid fa-handshake"></i>
+                    <span>HARMONIZATION_EXPERT</span>
+                    <div class="spinner hidden"></div>
+                </div>
+                <div class="agent-step" id="step-predictor">
+                    <i class="fa-solid fa-crystal-ball"></i>
+                    <span>PREDICTOR</span>
+                    <div class="spinner hidden"></div>
+                </div>
+                <div class="agent-step" id="step-compiler">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>REPORT_COMPILER</span>
+                    <div class="spinner hidden"></div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="hidden fade-in">
+            <div class="results-header">
+                <h2>Tahlil Hisoboti</h2>
+                <button id="newAnalysisBtn" class="btn-outline"><i class="fa-solid fa-rotate-left"></i> Yangi Tahlil</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Executive Summary -->
+                <div class="card glass-card full-width">
+                    <h3><i class="fa-solid fa-book-open"></i> Umumiy Xulosa (Executive Summary)</h3>
+                    <p id="res-exec-summary"></p>
+                </div>
+
+                <!-- Risk Score & Priorities -->
+                <div class="card glass-card">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Bashorat qilingan Xavf Darajasi</h3>
+                    <div class="risk-score-circle">
+                        <span id="res-risk-score">0</span>
+                        <small>/100</small>
+                    </div>
+                </div>
+
+                <div class="card glass-card">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Asosiy Ustuvor Vazifalar</h3>
+                    <ul id="res-priorities" class="custom-list"></ul>
+                </div>
+
+                <!-- Vulnerabilities -->
+                <div class="card glass-card full-width">
+                    <h3><i class="fa-solid fa-bug"></i> Topilgan Bo'shliqlar (Vulnerabilities)</h3>
+                    <div id="res-vulnerabilities" class="table-container"></div>
+                </div>
+                
+                <!-- JSON Raw Viewer -->
+                <div class="card glass-card full-width">
+                    <h3><i class="fa-solid fa-code"></i> AI Tizimining Xom Natijalari (JSON)</h3>
+                    <pre><code id="res-json-raw"></code></pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
