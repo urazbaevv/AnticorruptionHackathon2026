@@ -478,6 +478,7 @@ pre {
         grid-template-columns: 1fr;
     }
 }
+<<<<<<< HEAD
 
 .history-item {
     transition: background 0.2s;
@@ -485,3 +486,5 @@ pre {
 .history-item:hover {
     background: rgba(255, 255, 255, 0.1) !important;
 }
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1

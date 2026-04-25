@@ -6,11 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const apiKeyInput = document.getElementById('apiKeyInput');
 
+<<<<<<< HEAD
     const historyBtn = document.getElementById('historyBtn');
     const historyModal = document.getElementById('historyModal');
     const closeHistoryBtn = document.getElementById('closeHistoryBtn');
     const historyList = document.getElementById('historyList');
 
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1
     const inputSection = document.getElementById('inputSection');
     const documentInput = document.getElementById('documentInput');
     const analyzeBtn = document.getElementById('analyzeBtn');
@@ -40,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("Sozlamalar saqlandi!");
     });
 
+<<<<<<< HEAD
     historyBtn.addEventListener('click', async () => {
         historyModal.classList.remove('hidden');
         await loadHistory();
@@ -49,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
         historyModal.classList.add('hidden');
     });
 
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1
     // Analysis Event
     analyzeBtn.addEventListener('click', async () => {
         const text = documentInput.value.trim();
@@ -122,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+<<<<<<< HEAD
     async function loadHistory() {
         try {
             historyList.innerHTML = "Yuklanmoqda...";
@@ -166,6 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1
     // UI Functions
     function runProgressAnimation() {
         const steps = [

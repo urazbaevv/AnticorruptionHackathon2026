@@ -5,8 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import json
+<<<<<<< HEAD
 import uuid
 from datetime import datetime
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1
 from agents import run_anticorruption_analysis
 
 app = FastAPI(title="Anticorruption AI Agent API")
@@ -22,7 +25,10 @@ app.add_middleware(
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
+<<<<<<< HEAD
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1
 
 # Ensure data dir exists
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -62,6 +68,7 @@ async def analyze_document(req: AnalyzeRequest):
         
     try:
         results = await run_anticorruption_analysis(req.document_text, api_key)
+<<<<<<< HEAD
         
         # Save to history
         history = []
@@ -84,10 +91,13 @@ async def analyze_document(req: AnalyzeRequest):
         with open(HISTORY_FILE, "w") as f:
             json.dump(history, f)
             
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1
         return {"status": "success", "results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+<<<<<<< HEAD
 @app.get("/api/history")
 async def get_history():
     if os.path.exists(HISTORY_FILE):
@@ -98,6 +108,8 @@ async def get_history():
                 pass
     return []
 
+=======
+>>>>>>> c9e97ee34f3c7e2e663b9c7a4a08db8f7cf55da1
 # Serve static files (Frontend)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
